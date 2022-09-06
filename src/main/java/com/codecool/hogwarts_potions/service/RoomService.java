@@ -21,12 +21,14 @@ public class RoomService {
     }
 
     public Room getRoomById(Long id) {
-        //TODO
-        return null;
+        return roomRepository.getById(id);
     }
 
     public void updateRoomById(Long id, Room updatedRoom) {
-        //TODO
+        Room oldRoom = roomRepository.getById(id);
+        oldRoom = updatedRoom;
+        roomRepository.saveAndFlush(updatedRoom);
+
     }
 
     public void deleteRoomById(Long id) {
