@@ -11,10 +11,14 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Room {
 
     @JsonIgnore
+    @Id
+    @GeneratedValue
     private Long id;
     private Integer capacity;
+    @OneToMany
     private Set<Student> residents;
 }
