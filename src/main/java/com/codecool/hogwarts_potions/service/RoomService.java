@@ -1,11 +1,14 @@
 package com.codecool.hogwarts_potions.service;
 
 import com.codecool.hogwarts_potions.model.Room;
+import com.codecool.hogwarts_potions.model.Student;
 import com.codecool.hogwarts_potions.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class RoomService {
@@ -21,13 +24,12 @@ public class RoomService {
     }
 
     public Room getRoomById(Long id) {
-        return roomRepository.getById(id);
+        Optional<Room> room = roomRepository.findById(id);
+        return room.isPresent()? room.get() : null;
     }
 
     public void updateRoomById(Long id, Room updatedRoom) {
-        Room oldRoom = roomRepository.getById(id);
-        oldRoom = updatedRoom;
-        roomRepository.saveAndFlush(updatedRoom);
+       roomRepository.upDateRoom(id, updatedRoom.getResidents());
 
     }
 
