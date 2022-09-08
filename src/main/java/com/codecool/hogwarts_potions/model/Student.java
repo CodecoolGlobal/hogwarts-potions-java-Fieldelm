@@ -15,11 +15,15 @@ import javax.persistence.Id;
 @Entity
 public class Student {
 
-    @JsonIgnore
+    //@JsonIgnore
     @Id
     @GeneratedValue
     private Long id;
     private String name;
     private HouseType houseType;
     private PetType petType;
+
+    public PetType getPetType() {
+        return petType;
+    }
 }

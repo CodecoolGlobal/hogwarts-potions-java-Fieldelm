@@ -10,7 +10,5 @@ import java.util.Set;
 
 public interface RoomRepository extends JpaRepository<Room,Long> {
 
-    @Query("UPDATE Room SET residents = :students WHERE id = :id")
-    default void upDateRoom(Long id, Set<Student> students){}
 
 }

@@ -1,19 +1,26 @@
 package com.codecool.hogwarts_potions.service;
 
+import com.codecool.hogwarts_potions.model.PetType;
 import com.codecool.hogwarts_potions.model.Room;
 import com.codecool.hogwarts_potions.model.Student;
 import com.codecool.hogwarts_potions.repository.RoomRepository;
+//import jdk.vm.ci.code.RegisterAttributes;
+import com.codecool.hogwarts_potions.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class RoomService {
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private StudentService studentService;
 
     public List<Room> getAllRooms() {
         return roomRepository.findAll();
@@ -28,17 +35,35 @@ public class RoomService {
         return room.isPresent()? room.get() : null;
     }
 
-    public void updateRoomById(Long id, Room updatedRoom) {
-       roomRepository.upDateRoom(id, updatedRoom.getResidents());
+    public void updateRoomById(Long id, List<Long> studentIds) {
+        Room oldRoom = getRoomById(id);
+        Set<Student> students = new HashSet<>();
+        studentIds.stream().forEach((studId)->{
+            students.add(studentService.getStudentById(studId));
+        });
+        oldRoom.setResidents(students);
 
     }
 
     public void deleteRoomById(Long id) {
-        //TODO
+       roomRepository.deleteById(id);
     }
 
     public List<Room> getRoomsForRatOwners() {
-        //TODO
-        return null;
+       List <Room> rooms = roomRepository.findAll();
+       List<Room> ratOwnersRoom = new ArrayList<>();
+
+       for (Room room : rooms){
+           boolean safeForRats = true;
+           for(Student resident : room.getResidents()){
+               if(resident.getPetType() == PetType.CAT || resident.getPetType()==PetType.OWL){
+                   safeForRats = false;
+               }
+           }
+           if(safeForRats){
+               ratOwnersRoom.add(room);
+           }
+       }
+        return ratOwnersRoom;
     }
 }
