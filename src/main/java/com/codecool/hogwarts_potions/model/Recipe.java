@@ -1,8 +1,15 @@
 package com.codecool.hogwarts_potions.model;
 
+import lombok.*;
+
 import javax.persistence.*;
 import java.util.List;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Entity
 public class Recipe {
 
@@ -13,6 +20,7 @@ public class Recipe {
     @OneToOne
     private Student student;
     @ManyToMany
+
     private List<Ingredient> ingredients;
 
 

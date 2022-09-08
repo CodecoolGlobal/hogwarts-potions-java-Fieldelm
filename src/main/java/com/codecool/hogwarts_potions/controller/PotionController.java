@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class PotionController {
     PotionService potionService;
 
+
     @Autowired
     public PotionController(PotionService potionService){
         this.potionService = potionService;
     }
+
+
 }
