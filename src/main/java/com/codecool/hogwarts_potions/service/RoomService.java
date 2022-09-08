@@ -17,9 +17,6 @@ public class RoomService {
     private RoomRepository roomRepository;
 
     @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
     private StudentService studentService;
 
     public List<Room> getAllRooms() {
