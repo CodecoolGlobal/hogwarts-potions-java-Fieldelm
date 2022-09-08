@@ -49,14 +49,14 @@ public class RoomService {
     }
 
     private boolean roomSafeForRats(Room room) {
-        boolean safe = true;
+       // boolean safe = true;
         for (Student student : room.getResidents()) {
             if (student.getPetType() == PetType.CAT || student.getPetType() == PetType.OWL) {
-                safe = false;
-                break;
+               return false;
+
             }
         }
-        return safe;
+        return true;
     }
 
     public List<Room> getRoomsForRatOwners() {
