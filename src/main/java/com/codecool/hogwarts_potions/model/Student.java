@@ -26,4 +26,16 @@ public class Student {
     public PetType getPetType() {
         return petType;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public HouseType getHouseType() {
+        return houseType;
+    }
 }

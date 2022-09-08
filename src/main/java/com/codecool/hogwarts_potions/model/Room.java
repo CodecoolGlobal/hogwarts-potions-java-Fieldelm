@@ -1,5 +1,6 @@
 package com.codecool.hogwarts_potions.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -27,8 +28,18 @@ public class Room {
         this.residents = residents;
     }
 
+    @JsonFormat
     public Set<Student> getResidents() {
         return residents;
+    }
+
+    @Override
+    public String toString(){
+        String students = "";
+        for(Student student: residents){
+            students+= student.getName() + "| ";
+        }
+        return String.format("Room id: %d, residents: %s", this.id, students);
     }
 
     /*

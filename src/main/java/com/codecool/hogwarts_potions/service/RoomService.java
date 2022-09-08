@@ -29,16 +29,19 @@ public class RoomService {
 
     public Room getRoomById(Long id) {
         Optional<Room> room = roomRepository.findById(id);
+        System.out.println(room.get());
         return room.isPresent()? room.get() : null;
     }
 
     public void updateRoomById(Long id, List<Long> studentIds) {
         Room oldRoom = getRoomById(id);
         Set<Student> students = new HashSet<>();
-        studentIds.stream().forEach((studId)->{
+        for(Long studId: studentIds){
             students.add(studentService.getStudentById(studId));
-        });
+        }
+
         oldRoom.setResidents(students);
+        roomRepository.saveAndFlush(oldRoom);
 
     }
 
