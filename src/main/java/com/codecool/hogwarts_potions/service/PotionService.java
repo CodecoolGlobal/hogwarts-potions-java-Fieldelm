@@ -202,4 +202,22 @@ public class PotionService {
         potionRepository.saveAndFlush(potion);
         return potion;
     }
+
+    public List<Recipe> getRecipesForPotion(Long id) {
+        Optional<Potion> optionalPotion = potionRepository.findById(id);
+        List<Recipe> allRecipes = recipeRepository.findAll();
+        List<Recipe> sameRecipes = new ArrayList<>();
+        if(optionalPotion.isPresent() && allRecipes!= null){
+            for(Recipe recipe: allRecipes){
+                if(recipe.getIngredients().containsAll(optionalPotion.get().getIngredients())){
+                    sameRecipes.add(recipe);
+                }
+            }
+          /*  return allRecipes.stream().filter(recipe -> recipe.getIngredients().containsAll(optionalPotion.get().getIngredients())).collect(Collectors.toList());*/
+
+        }else{
+            return null;
+        }
+        return sameRecipes;
+    }
 }

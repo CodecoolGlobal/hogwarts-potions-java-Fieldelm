@@ -2,6 +2,7 @@ package com.codecool.hogwarts_potions.controller;
 
 import com.codecool.hogwarts_potions.model.Ingredient;
 import com.codecool.hogwarts_potions.model.Potion;
+import com.codecool.hogwarts_potions.model.Recipe;
 import com.codecool.hogwarts_potions.service.PotionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -48,5 +49,10 @@ public class PotionController {
             return String.format("%s, send only one ingredient", e);
         }
 
+    }
+
+    @GetMapping("/{potion-id}/help")
+    public List<Recipe> getRecipesForBrewingPotionIngredients(@PathVariable("potion-id") Long id){
+        return potionService.getRecipesForPotion(id);
     }
 }
