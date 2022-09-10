@@ -10,10 +10,7 @@ import com.codecool.hogwarts_potions.service.constants.BrewingServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,25 +45,17 @@ public class PotionService {
         ingredients.forEach(ingredient -> ingredient.setName(ingredient.getName().toLowerCase()));
 
 
-        List<Ingredient> sortedIngredients = ingredients.stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList());
+        List<Ingredient> sortedIngredients = sortIngredient(ingredients);
 
         List<Ingredient> persistentList = getPersistentList(sortedIngredients);
 
-        String ingredientString = sortedIngredients.stream().map(Ingredient::getName).collect(Collectors.joining());
+        String ingredientString = createIngredientString(sortedIngredients);
 
         Potion newPotion = createNewPotion(studentId);
         if(ingredients.size()<BrewingServiceConstants.MAX_INGREDIENTS_FOR_POTIONS){
             newPotion.setBrewingStatus(BrewingStatus.BREW);
         }else {
-            if (hasNewIngredient(sortedIngredients) || !isRecipeAlreadyExists(ingredientString)) {
-                newPotion.setBrewingStatus(BrewingStatus.DISCOVERY);
-                Recipe newRecipe = createRecipe(studentId, persistentList);
-                newPotion.setRecipe(newRecipe);
-                newPotion.setName(newRecipe.getName());
-            } else {
-                newPotion.setBrewingStatus(BrewingStatus.REPLICA);
-                newPotion.setName(String.format("%s's replica", newPotion.getBrewerStudent().getName()));
-            }
+            checkIfReplica(newPotion, studentId, persistentList, sortedIngredients, ingredientString);
         }
 
         newPotion.setIngredients(persistentList);
@@ -74,6 +63,32 @@ public class PotionService {
         return newPotion;
 
     }
+
+    private List<Ingredient> sortIngredient(List<Ingredient> unsortedIngredients){
+        return unsortedIngredients.stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList());
+    }
+    private void checkIfReplica(Potion newPotion, Long studentId, List<Ingredient> persistentList, List<Ingredient> sortedIngredients, String ingredientString){
+        if (hasNewIngredient(sortedIngredients) || !isRecipeAlreadyExists(ingredientString)) {
+            setDiscoveryBrewingStatus(newPotion, studentId, persistentList);
+        } else {
+            setReplicaBrewingStatus(newPotion);
+        }
+
+    }
+
+
+    private void setDiscoveryBrewingStatus(Potion potion, Long studentId, List<Ingredient> ingredients){
+
+        potion.setBrewingStatus(BrewingStatus.DISCOVERY);
+        Recipe newRecipe = createRecipe(studentId, ingredients);
+        potion.setRecipe(newRecipe);
+        potion.setName(newRecipe.getName());
+    }
+    private void setReplicaBrewingStatus(Potion potion){
+        potion.setBrewingStatus(BrewingStatus.REPLICA);
+        potion.setName(String.format("%s's replica", potion.getBrewerStudent().getName()));
+    }
+
 
     private Potion createNewPotion(Long studentId) {
         Potion newPotion = new Potion();
@@ -146,5 +161,45 @@ public class PotionService {
             properList.add(ingredientRepository.getIngredientByName(newPotionIngredient.getName()));
         }
         return properList;
+    }
+    private String createIngredientString(List<Ingredient> ingredients){
+        return ingredients.stream().map(Ingredient::getName).collect(Collectors.joining());
+    }
+
+    public Potion addIngredientToPotion(Long id, Ingredient ingredient) {
+        Potion potion;
+        String ingredientName = ingredient.getName();
+        Optional<Potion> optionalPotion = potionRepository.findById(id);
+        ingredient.setName(ingredient.getName().toLowerCase());
+        Ingredient persistentIngredient;
+
+
+        if(optionalPotion.isPresent()){
+           potion = optionalPotion.get();
+            if(ingredientRepository.existsByName(ingredientName)){
+                persistentIngredient = ingredientRepository.getIngredientByName(ingredientName);
+                potion.addIngredient(persistentIngredient);
+            }
+            else{
+                ingredientRepository.saveAndFlush(ingredient);
+                persistentIngredient = ingredientRepository.getIngredientByName(ingredientName);
+                potion.addIngredient(persistentIngredient);
+            }
+        }else{
+
+            return null;
+        }
+
+        List<Ingredient> sortedIngredients = sortIngredient(potion.getIngredients());
+
+        String ingredientsString = createIngredientString(sortedIngredients);
+
+        if(potion.getIngredients().size() == BrewingServiceConstants.MAX_INGREDIENTS_FOR_POTIONS){
+            checkIfReplica(potion, potion.getBrewerStudent().getId(),sortedIngredients, sortedIngredients, ingredientsString );
+        }
+
+        potion.setIngredients(sortIngredient(potion.getIngredients()));
+        potionRepository.saveAndFlush(potion);
+        return potion;
     }
 }

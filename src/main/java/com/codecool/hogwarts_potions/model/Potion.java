@@ -29,6 +29,8 @@ public class Potion {
     private Recipe recipe;
 
 
-
+    public void addIngredient(Ingredient ingredient){
+        ingredients.add(ingredient);
+    }
 
 }
