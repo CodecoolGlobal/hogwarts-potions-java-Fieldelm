@@ -47,7 +47,7 @@ public class PotionService {
 
         ingredients.forEach(ingredient -> ingredient.setName(ingredient.getName().toLowerCase()));
 
-        System.out.println(ingredients.toString());
+
         List<Ingredient> sortedIngredients = ingredients.stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList());
 
         List<Ingredient> persistentList = getPersistentList(sortedIngredients);
@@ -55,15 +55,18 @@ public class PotionService {
         String ingredientString = sortedIngredients.stream().map(Ingredient::getName).collect(Collectors.joining());
 
         Potion newPotion = createNewPotion(studentId);
-
-        if (hasNewIngredient(sortedIngredients) || !isRecipeAlreadyExists(ingredientString)) {
-            newPotion.setBrewingStatus(BrewingStatus.DISCOVERY);
-            Recipe newRecipe = createRecipe(studentId, persistentList);
-            newPotion.setRecipe(newRecipe);
-            newPotion.setName(newRecipe.getName());
-        } else {
-            newPotion.setBrewingStatus(BrewingStatus.REPLICA);
-            newPotion.setName(String.format("%s's replica", newPotion.getBrewerStudent().getName()));
+        if(ingredients.size()<BrewingServiceConstants.MAX_INGREDIENTS_FOR_POTIONS){
+            newPotion.setBrewingStatus(BrewingStatus.BREW);
+        }else {
+            if (hasNewIngredient(sortedIngredients) || !isRecipeAlreadyExists(ingredientString)) {
+                newPotion.setBrewingStatus(BrewingStatus.DISCOVERY);
+                Recipe newRecipe = createRecipe(studentId, persistentList);
+                newPotion.setRecipe(newRecipe);
+                newPotion.setName(newRecipe.getName());
+            } else {
+                newPotion.setBrewingStatus(BrewingStatus.REPLICA);
+                newPotion.setName(String.format("%s's replica", newPotion.getBrewerStudent().getName()));
+            }
         }
 
         newPotion.setIngredients(persistentList);
