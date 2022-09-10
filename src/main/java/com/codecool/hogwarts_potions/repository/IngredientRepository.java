@@ -8,4 +8,6 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 
 
     boolean existsByName(String name);
+
+    Ingredient getIngredientByName(String name);
 }

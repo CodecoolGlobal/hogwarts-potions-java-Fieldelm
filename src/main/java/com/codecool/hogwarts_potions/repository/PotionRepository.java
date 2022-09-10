@@ -7,7 +7,5 @@ import java.util.List;
 
 public interface PotionRepository extends JpaRepository<Potion, Long> {
 
-    default List<Potion> getPotionByBrewerStudent(Long id){
-        return null;
-    }
+   List<Potion> getPotionsByBrewerStudentId(Long id);
 }

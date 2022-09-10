@@ -10,6 +10,7 @@ import com.codecool.hogwarts_potions.service.constants.BrewingServiceConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -43,45 +44,51 @@ public class PotionService {
         if (ingredients.size() > BrewingServiceConstants.MAX_INGREDIENTS_FOR_POTIONS) {
             return null;
         }
+
+        ingredients.forEach(ingredient -> ingredient.setName(ingredient.getName().toLowerCase()));
+
+        System.out.println(ingredients.toString());
         List<Ingredient> sortedIngredients = ingredients.stream().sorted(Comparator.comparing(Ingredient::getName)).collect(Collectors.toList());
 
-        Potion newPotion = createNewPotion(studentId, sortedIngredients);
+        List<Ingredient> persistentList = getPersistentList(sortedIngredients);
 
-        if (ingredients.size() < BrewingServiceConstants.MAX_INGREDIENTS_FOR_POTIONS) {
-            newPotion.setBrewingStatus(BrewingStatus.BREW);
-        } else if (isContainsNewIngredient(ingredients) || !isRecipeAlreadyExists(sortedIngredients)) {
+        String ingredientString = sortedIngredients.stream().map(Ingredient::getName).collect(Collectors.joining());
+
+        Potion newPotion = createNewPotion(studentId);
+
+        if (hasNewIngredient(sortedIngredients) || !isRecipeAlreadyExists(ingredientString)) {
             newPotion.setBrewingStatus(BrewingStatus.DISCOVERY);
-            Recipe newRecipe = createRecipe(studentId, sortedIngredients);
+            Recipe newRecipe = createRecipe(studentId, persistentList);
             newPotion.setRecipe(newRecipe);
             newPotion.setName(newRecipe.getName());
-
         } else {
             newPotion.setBrewingStatus(BrewingStatus.REPLICA);
-
+            newPotion.setName(String.format("%s's replica", newPotion.getBrewerStudent().getName()));
         }
+
+        newPotion.setIngredients(persistentList);
         potionRepository.saveAndFlush(newPotion);
         return newPotion;
 
     }
 
-    private Potion createNewPotion(Long studentId, List<Ingredient> ingredients) {
+    private Potion createNewPotion(Long studentId) {
         Potion newPotion = new Potion();
         newPotion.setBrewerStudent(studentService.getStudentById(studentId));
-        newPotion.setIngredients(ingredients);
 
         return newPotion;
     }
 
     public List<Potion> getPotionsByStudent(Long studentId) {
-        List<Potion> potions = potionRepository.getPotionByBrewerStudent(studentId);
-        return potions!= null ? potions: null;
+        List<Potion> potions = potionRepository.getPotionsByBrewerStudentId(studentId);
+        return potions != null ? potions : null;
     }
 
 
     //for Recipes, might worth refactor them to new RecipeService class
 
     private List<Recipe> getRecipesByStudent(Long id) {
-        return recipeRepository.getRecipeByBrewerStudent(id);
+        return recipeRepository.getRecipeByStudentId(id);
     }
 
     private Recipe createRecipe(Long studentId, List<Ingredient> ingredients) {
@@ -89,59 +96,52 @@ public class PotionService {
         Student student = studentRepository.getById(studentId);
         List<Recipe> recipesOfStudent = getRecipesByStudent(studentId);
 
-        int studentsRecipes = recipesOfStudent != null ? recipesOfStudent.size(): 0;
+        int studentsRecipes = recipesOfStudent != null ? recipesOfStudent.size() : 0;
         newRecipe.setStudent(student);
         newRecipe.setName(String.format("%s's discovery #%d", student.getName(), studentsRecipes + 1));
         newRecipe.setIngredients(ingredients);
+
         recipeRepository.saveAndFlush(newRecipe);
         return newRecipe;
     }
 
 
-    private boolean isRecipeAlreadyExists(List<Ingredient> newIngredients) {
-        List<List<Ingredient>> allRecipeIngredients = recipeRepository.findAll().stream().map(Recipe::getIngredients).collect(Collectors.toList());
+    private boolean isRecipeAlreadyExists(String newPotionIngredientString) {
 
+        List<String> allRecipeIngredients = recipeRepository.findAll().stream().map(recipe -> recipe.getIngredients().stream().map(ingredient -> ingredient.getName()).collect(Collectors.joining())).collect(Collectors.toList());
 
-        for (List<Ingredient> existingIngredients : allRecipeIngredients) {
-            if (existingIngredients.size() != newIngredients.size()) {
-                continue;
+        for (String existingIngredientString : allRecipeIngredients) {
+            if (existingIngredientString.equals(newPotionIngredientString)) {
+                return true;
             }
-            return hasSameIngredients(existingIngredients, newIngredients);
         }
+
         return false;
     }
 
     //for Ingredients, might worth refactoring them to new ingredient service
-    private boolean hasSameIngredients(List<Ingredient> thisIngredients, List<Ingredient> othersIngredients) {
-        int amount = thisIngredients.size();
 
-        if (amount != othersIngredients.size()) {
-            return false;
-        } else {
-            for (int i = 0; i < amount; i++) {
-                if (!thisIngredients.get(i).getName().equalsIgnoreCase(othersIngredients.get(i).getName())) {
-                    return false;
-                }
+    private boolean hasNewIngredient(List<Ingredient> ingredients) {
+        boolean isHasNew = false;
+        for (Ingredient newPotionIngredient : ingredients) {
+            if (!ingredientRepository.existsByName(newPotionIngredient.getName())) {
+                isHasNew = true;
+                ingredientRepository.saveAndFlush(newPotionIngredient);
             }
         }
-        return true;
+        return isHasNew;
     }
 
 
-    private boolean isExistingIngredient(Ingredient ingredient) {
-        return ingredientRepository.existsByName(ingredient.getName());
-    }
-
-
-    private boolean isContainsNewIngredient(List<Ingredient> ingredients) {
-        boolean isContainingNew = false;
-        for (Ingredient ingredient : ingredients) {
-            if (!isExistingIngredient(ingredient)) {
-                isContainingNew = true;
-                ingredientRepository.saveAndFlush(ingredient);
+    List<Ingredient> getPersistentList(List<Ingredient> ingredients) {
+        List<Ingredient> properList = new ArrayList<>();
+        for (Ingredient newPotionIngredient : ingredients) {
+            if (!ingredientRepository.existsByName(newPotionIngredient.getName())) {
+                ingredientRepository.saveAndFlush(newPotionIngredient);
             }
-        }
-        return isContainingNew;
-    }
 
+            properList.add(ingredientRepository.getIngredientByName(newPotionIngredient.getName()));
+        }
+        return properList;
+    }
 }

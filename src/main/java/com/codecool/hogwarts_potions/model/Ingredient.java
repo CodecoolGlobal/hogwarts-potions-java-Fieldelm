@@ -32,4 +32,9 @@ public class Ingredient {
     public int hashCode() {
         return Objects.hash(getName());
     }
+
+    @Override
+    public String toString(){
+        return this.name;
+    }
 }
