@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/potion")
+@RequestMapping("/potions")
 public class PotionController {
     PotionService potionService;
 
@@ -24,7 +24,7 @@ public class PotionController {
         return potionService.getAll();
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/brew/{id}")
     public Potion brewPotion(@PathVariable ("id") Long id, @RequestBody List<Ingredient> ingredients) {
         return potionService.brewPotion(id, ingredients);
 
