@@ -22,7 +22,7 @@ public class PotionController {
 
     @GetMapping
     public List<Potion> getAllPotions(){
-        return potionService.getAll();
+        return potionService.getAllPotions();
     }
 
     @PostMapping("/brew/{id}")
