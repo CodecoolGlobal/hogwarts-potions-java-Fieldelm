@@ -60,11 +60,12 @@ public class RoomService {
     }
 
     public List<Room> getRoomsForRatOwners() {
-        List<Room> rooms = roomRepository.findAll();
+       /* List<Room> rooms = roomRepository.findAll();
 
 
-        List<Room> ratOwnersRoom = rooms.stream().filter(room -> roomSafeForRats(room)).collect(Collectors.toList());
+        List<Room> ratOwnersRoom = rooms.stream().filter(room -> roomSafeForRats(room)).collect(Collectors.toList());*/
 
-        return ratOwnersRoom;
+
+        return roomRepository.findRatFriendlyRoom();
     }
 }
